@@ -3,7 +3,7 @@ return {
     TagText = "COMET SCRIPTER",
     TagColor = Color3.fromRGB(255,65,65)
   },
-  ["nizhggerIPW"] = {
+  ["uihuiiiiiiiiiiiiiih"] = {
     TagText = "COMET OWNER",
     TagColor = Color3.fromRGB(0,255,200)
   },
