@@ -14,5 +14,9 @@ return {
   ["DepredationGamin_g"] = {
     TagText = "Ham135IsDaddy",
     TagColor = Color3.fromRGB(0,115,255)
+  },
+  ["ihads_Xwithyoulol"] = {
+    TagText = "Cumslut",
+    TagColor = Color3.fromRGB(255,0,255)
   }
 }
