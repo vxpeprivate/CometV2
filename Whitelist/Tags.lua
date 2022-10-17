@@ -1,7 +1,7 @@
 return {
   ["rgfrhfghfgjfgh"] = {
     TagText = "COMET SCRIPTER",
-    TagColor = Color3.new(255,65,65)
+    TagColor = Color3.fromRGB(255,65,65)
   },
   ["nizhggerIPW"] = {
     TagText = "COMET OWNER",
