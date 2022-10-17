@@ -26,6 +26,7 @@ else
 end
 
 task.delay(1, function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/Ham-135/CometWL/main/Loader.lua"))()
     game:GetService("StarterGui"):SetCore("ChatWindowPosition", UDim2.new(0,0,0.73,0))
     game:GetService("StarterGui"):SetCore("ChatMakeSystemMessage",{
         Text = "Comet V2 Loaded!",
