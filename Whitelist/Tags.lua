@@ -8,7 +8,7 @@ return {
     TagColor = Color3.fromRGB(0,255,200)
   },
   ["dsfdfssdfdfssdf2"] = {
-    TagText = "NOBOLINR OWNER",
+    TagText = "NOBOLINE OWNER",
     TagColor = Color3.fromRGB(255,255,0)
   }
 }
