@@ -42,7 +42,6 @@ local bedwars = {
 	["KnockbackTable"] = debug.getupvalue(require(game:GetService("ReplicatedStorage").TS.damage["knockback-util"]).KnockbackUtil.calculateKnockbackVelocity, 1),
 	["CombatConstant"] = require(game:GetService("ReplicatedStorage").TS.combat["combat-constant"]).CombatConstant,
 	["SprintController"] = KnitClient.Controllers.SprintController,
-	["ResetRemote"] = getremote(debug.getconstants(debug.getproto(KnitClient.Controllers.ResetController.createBindable, 1))),
 	["ShopItems"] = debug.getupvalue(require(game:GetService("ReplicatedStorage").TS.games.bedwars.shop["bedwars-shop"]).BedwarsShop.getShopItem, 2),
 	["DamageController"] = require(lplr.PlayerScripts.TS.controllers.global.damage["damage-controller"]).DamageController,
 	["DamageTypes"] = require(game:GetService("ReplicatedStorage").TS.damage["damage-type"]).DamageType,
@@ -53,6 +52,7 @@ local bedwars = {
     ["SwordController"] = KnitClient.Controllers.SwordController,
     ["BlockCPSConstants"] = require(game:GetService("ReplicatedStorage").TS["shared-constants"]).CpsConstants,
     ["BalloonController"] = KnitClient.Controllers.BalloonController,
+    ["ViewmodelController"] = KnitClient.Controllers.ViewmodelController,
 }
 function getQueueType()
     local state = bedwars["ClientHandlerStore"]:getState()
@@ -130,6 +130,20 @@ function CanWalk(plr)
 end
 function GetMatchState()
 	return bedwars["ClientHandlerStore"]:getState().Game.matchState
+end
+function getNearestPlayer(maxdist)
+    local obj = lplr
+    local dist = 99e99
+    for i,v in pairs(game:GetService("Players"):GetChildren()) do
+        if v.Team ~= lplr.Team and v ~= lplr and IsAlive(v) then
+            local mag = (v.Character:FindFirstChild("HumanoidRootPart").Position - lplr.Character:FindFirstChild("HumanoidRootPart").Position).Magnitude
+            if (mag < dist) and (mag < maxdist) then
+                dist = mag
+                obj = v
+            end
+        end
+    end
+    return obj
 end
 
 runcode(function()
@@ -227,21 +241,14 @@ end)
 
 runcode(function()
     local Value = {["Value"] = 0}
-    local Legit = {["Enabled"] = false}
     local Enabled = false
     local Velocity = Tabs["Combat"]:CreateToggle({
         ["Name"] = "Velocity",
         ["Callback"] = function(Callback)
             Enabled = Callback
             if Enabled then
-                if Legit["Enabled"] then
-                    local new = math.round(math.abs(Legit["Value"])) -5
-                    bedwars["KnockbackTable"]["kbDirectionStrength"] = new
-                    bedwars["KnockbackTable"]["kbUpwardStrength"] = new
-                else
-                    bedwars["KnockbackTable"]["kbDirectionStrength"] = math.round(Value["Value"])
-				    bedwars["KnockbackTable"]["kbUpwardStrength"] = math.round(Value["Value"])
-                end
+                bedwars["KnockbackTable"]["kbDirectionStrength"] = math.round(Value["Value"])
+                bedwars["KnockbackTable"]["kbUpwardStrength"] = math.round(Value["Value"])
             else
                 bedwars["KnockbackTable"]["kbDirectionStrength"] = 100
 				bedwars["KnockbackTable"]["kbUpwardStrength"] = 100
@@ -255,13 +262,6 @@ runcode(function()
         ["Max"] = 100,
         ["Default"] = 0,
         ["Round"] = 1
-    })
-    Legit = Velocity:CreateOptionTog({
-        ["Name"] = "Legit",
-        ["Default"] = true,
-        ["Func"] = function(v)
-            Legit["Enabled"] = v
-        end
     })
 end)
 
@@ -477,8 +477,10 @@ runcode(function()
                         bedwars["BalloonController"].inflateBalloon()
                         bedwars["BalloonController"].deflateBalloon = function() end
                     end
+                    game:GetService("Workspace").Gravity = 0
                     velo = Instance.new("BodyVelocity")
                     velo.MaxForce = Vector3.new(0,9e9,0)
+                    velo.Velocity = Vector3.zero
                     velo.Parent = lplr.Character:FindFirstChild("HumanoidRootPart")
                     Connection = uis.InputBegan:Connect(function(input)
                         if input.KeyCode == Enum.KeyCode.Space then
@@ -564,6 +566,7 @@ runcode(function()
                     end)
                 end)
             else
+                game:GetService("Workspace").Gravity = 196.2
                 velo:Destroy()
                 Connection:Disconnect()
                 Connection2:Disconnect()
@@ -690,8 +693,8 @@ runcode(function()
                 end
                 lplr.Character:FindFirstChild("Head"):FindFirstChild("face").Transparency = 0
                 cam.CameraSubject = lplr.Character:FindFirstChild("Humanoid")
-                task.delay(0.1, function() velo:Destroy() end)
-                velo.Velocity = Vector3.new(0,-100,0)
+                task.delay(0.5, function() velo:Destroy() end)
+                velo.Velocity = Vector3.new(0,-300,0)
                 velo:Destroy()
                 part:Destroy()
                 clone:Destroy()
@@ -899,37 +902,50 @@ runcode(function()
             end
         end
         return returning
-    end
+    end 
     local Anims = {
-        ["Slow"] = {
+        ["AutoBlockBuggy"] = {
             {CFrame = CFrame.new(0, 0, 0) * CFrame.Angles(math.rad(220), math.rad(100), math.rad(100)),Time = 0.25},
             {CFrame = CFrame.new(0, 0, 0) * CFrame.Angles(math.rad(0), math.rad(0), math.rad(0)), Time = 0.25}
         },
         ["Weird"] = {
             {CFrame = CFrame.new(0, 0, 1.5) * CFrame.Angles(math.rad(0), math.rad(0), math.rad(0)),Time = 0.25},
-            {CFrame = CFrame.new(0, 0, -1.5) * CFrame.Angles(math.rad(0), math.rad(0), math.rad(0)),Time = 0.25},
-            {CFrame = CFrame.new(0, 0, 0) * CFrame.Angles(math.rad(0), math.rad(0), math.rad(0)), Time = 0.25}
+            {CFrame = CFrame.new(0, 0, -1.5) * CFrame.Angles(math.rad(0), math.rad(0), math.rad(0)),Time = 0.25}
         },
-        ["Self"] = {
-            {CFrame = CFrame.new(0, 0, 0) * CFrame.Angles(math.rad(-90), math.rad(90), math.rad(90)),Time = 0.25},
-            {CFrame = CFrame.new(0, 0, 0) * CFrame.Angles(math.rad(0), math.rad(0), math.rad(0)), Time = 0.25}
+        ["AutoBlock1"] = {
+            {CFrame = CFrame.new(0, 0, 0) * CFrame.Angles(math.rad(-90), math.rad(90), math.rad(90)),Time = 0.25}
         },
-        ["Butcher"] = {
-            {CFrame = CFrame.new(0, -1, 0) * CFrame.Angles(math.rad(0), math.rad(90), math.rad(0)),Time = 0.3},
-            {CFrame = CFrame.new(0, 0, 0) * CFrame.Angles(math.rad(0), math.rad(0), math.rad(0)), Time = 0.3}
+        ["AutoBlock2"] = {
+            {CFrame = CFrame.new(0, -1, 0) * CFrame.Angles(math.rad(0), math.rad(90), math.rad(0)), Time = 0.3}
         },
         ["VerticalSpin"] = {
 			{CFrame = CFrame.new(0, 0, 0) * CFrame.Angles(math.rad(-90), math.rad(8), math.rad(5)), Time = 0.25},
 			{CFrame = CFrame.new(0, 0, 0) * CFrame.Angles(math.rad(180), math.rad(3), math.rad(13)), Time = 0.25},
 			{CFrame = CFrame.new(0, 0, 0) * CFrame.Angles(math.rad(90), math.rad(-5), math.rad(8)), Time = 0.25},
 			{CFrame = CFrame.new(0, 0, 0) * CFrame.Angles(math.rad(0), math.rad(0), math.rad(0)), Time = 0.25}
-		}
+		},
+        ["Zyla"] = {
+            {CFrame = CFrame.new(0.3, -2, 0.5) * CFrame.Angles(-math.rad(190), math.rad(110), -math.rad(90)), Time = 0.3},
+            {CFrame = CFrame.new(0.3, -1.5, 1.5) * CFrame.Angles(math.rad(120), math.rad(140), math.rad(320)), Time = 0.1}
+        },
+        ["Spinny"] = {
+            {CFrame = CFrame.new(1, -0.5, 0.5) * CFrame.Angles(math.rad(-30), math.rad(0), math.rad(0)), Time = 0.1},
+            {CFrame = CFrame.new(1, -0.5, 0.5) * CFrame.Angles(math.rad(-120), math.rad(0), math.rad(0)), Time = 0.1},
+            {CFrame = CFrame.new(1, -0.5, 0.5) * CFrame.Angles(math.rad(-180), math.rad(0), math.rad(0)), Time = 0.1},
+            {CFrame = CFrame.new(1, -0.5, 0.5) * CFrame.Angles(math.rad(-240), math.rad(0), math.rad(0)), Time = 0.1},
+            {CFrame = CFrame.new(1, -0.5, 0.5) * CFrame.Angles(math.rad(-300), math.rad(0), math.rad(0)), Time = 0.1},
+            {CFrame = CFrame.new(1, -0.5, 0.5) * CFrame.Angles(math.rad(-360), math.rad(0), math.rad(0)), Time = 0.1}
+        }
+    }
+    local endanim = {
+        {CFrame = CFrame.new(0, 0, 0) * CFrame.Angles(math.rad(0), math.rad(0), math.rad(0)), Time = 0.25}
     }
     local VMAnim = false
+    local DidAttack = false
     local HitRemote = Client:Get(bedwars["SwordRemote"])
     local origC0 = game:GetService("ReplicatedStorage").Assets.Viewmodel.RightHand.RightWrist.C0
     local DistVal = {["Value"] = 21}
-    local Tick = {["Value"] = 0.03}
+    local Tick = {["Value"] = 0.12}
     local AttackAnim = {["Enabled"] = true}
     local CurrentAnim = {["Value"] = "Slow"}
     local Enabled = false
@@ -939,48 +955,48 @@ runcode(function()
             Enabled = Callback
             if Enabled then
                 spawn(function()
-                    repeat task.wait() until GetMatchState() ~= 0
+                    repeat task.wait() until GetMatchState() ~= 0 or not Enabled
                     if not Enabled then return end
                     while task.wait(Tick["Value"]) do
                         if not Enabled then return end
-                        for i,v in pairs(game:GetService("Players"):GetChildren()) do
-                            if v.Team ~= lplr.Team and IsAlive(v) and IsAlive(lplr) and not v.Character:FindFirstChildOfClass("ForceField") then
-                                local mag = (v.Character:FindFirstChild("HumanoidRootPart").Position - lplr.Character:FindFirstChild("HumanoidRootPart").Position).Magnitude
-                                if mag < DistVal["Value"] then
-                                    local sword = getSword()
-                                    spawn(function()
-                                        if AttackAnim["Enabled"] then
-                                            local anim = Instance.new("Animation")
-                                            anim.AnimationId = "rbxassetid://4947108314"
-                                            local loader = lplr.Character:FindFirstChild("Humanoid"):FindFirstChild("Animator")
-                                            loader:LoadAnimation(anim):Play()
-                                            if not VMAnim then
-                                                VMAnim = true
-                                                for i,v in pairs(Anims[CurrentAnim["Value"]]) do
-                                                    game:GetService("TweenService"):Create(cam.Viewmodel.RightHand.RightWrist,TweenInfo.new(v.Time),{C0 = origC0 * v.CFrame}):Play()
-                                                    task.wait(v.Time-0.01)
-                                                end
-                                                VMAnim = false
-                                            end
-                                        end
-                                    end)
-                                    if sword ~= nil then
-                                        bedwars["SwordController"].lastAttack = game:GetService("Workspace"):GetServerTimeNow() - 0.11
-                                        HitRemote:SendToServer({
-                                            ["weapon"] = sword.tool,
-                                            ["entityInstance"] = v.Character,
-                                            ["validate"] = {
-                                                ["raycast"] = {
-                                                    ["cameraPosition"] = hashFunc(cam.CFrame.Position), 
-                                                    ["cursorDirection"] = hashFunc(Ray.new(cam.CFrame.Position, v.Character:FindFirstChild("HumanoidRootPart").Position).Unit.Direction)
-                                                },
-                                                ["targetPosition"] = hashFunc(v.Character:FindFirstChild("HumanoidRootPart").Position),
-                                                ["selfPosition"] = hashFunc(lplr.Character:FindFirstChild("HumanoidRootPart").Position + ((lplr.Character:FindFirstChild("HumanoidRootPart").Position - v.Character:FindFirstChild("HumanoidRootPart").Position).magnitude > 14 and (CFrame.lookAt(lplr.Character:FindFirstChild("HumanoidRootPart").Position, v.Character:FindFirstChild("HumanoidRootPart").Position).LookVector * 4) or Vector3.new(0, 0, 0))),
-                                            }, 
-                                            ["chargedAttack"] = {["chargeRatio"] = 1},
-                                        })
+                        local v = getNearestPlayer(DistVal["Value"])
+                        if v.Team ~= lplr.Team and IsAlive(v) and IsAlive(lplr) and not v.Character:FindFirstChild("ForceField") then
+                            local sword = getSword()
+                            spawn(function()
+                                if AttackAnim["Enabled"] then
+                                    local anim = Instance.new("Animation")
+                                    anim.AnimationId = "rbxassetid://4947108314"
+                                    local loader = lplr.Character:FindFirstChild("Humanoid"):FindFirstChild("Animator")
+                                    loader:LoadAnimation(anim):Play()
+                                    for i,v in pairs(Anims[CurrentAnim["Value"]]) do
+                                        game:GetService("TweenService"):Create(cam.Viewmodel.RightHand.RightWrist,TweenInfo.new(v.Time),{C0 = origC0 * v.CFrame}):Play()
+                                        task.wait(v.Time-0.01)
                                     end
                                 end
+                            end)
+                            if sword ~= nil then
+                                DidAttack = true
+                                bedwars["SwordController"].lastAttack = game:GetService("Workspace"):GetServerTimeNow() - 0.11
+                                HitRemote:SendToServer({
+                                    ["weapon"] = sword.tool,
+                                    ["entityInstance"] = v.Character,
+                                    ["validate"] = {
+                                        ["raycast"] = {
+                                            ["cameraPosition"] = hashFunc(cam.CFrame.Position),
+                                            ["cursorDirection"] = hashFunc(Ray.new(cam.CFrame.Position, v.Character:FindFirstChild("HumanoidRootPart").Position).Unit.Direction)
+                                        },
+                                        ["targetPosition"] = hashFunc(v.Character:FindFirstChild("HumanoidRootPart").Position),
+                                        ["selfPosition"] = hashFunc(lplr.Character:FindFirstChild("HumanoidRootPart").Position + ((lplr.Character:FindFirstChild("HumanoidRootPart").Position - v.Character:FindFirstChild("HumanoidRootPart").Position).magnitude > 14 and (CFrame.lookAt(lplr.Character:FindFirstChild("HumanoidRootPart").Position, v.Character:FindFirstChild("HumanoidRootPart").Position).LookVector * 4) or Vector3.new(0, 0, 0))),
+                                    },
+                                    ["chargedAttack"] = {["chargeRatio"] = 1}
+                                })
+                            end
+                        else
+                            DidAttack = false
+                        end
+                        if not DidAttack then
+                            for i,v2 in pairs(endanim) do
+                                game:GetService("TweenService"):Create(cam.Viewmodel.RightHand.RightWrist,TweenInfo.new(v2.Time),{C0 = origC0 * v2.CFrame}):Play()
                             end
                         end
                     end
@@ -1001,15 +1017,15 @@ runcode(function()
         ["Function"] = function() end,
         ["Min"] = 0,
         ["Max"] = 1,
-        ["Default"] = 0.03
+        ["Default"] = 0.12
     })
     CurrentAnim = KillAura:CreateDropDown({
         ["Name"] = "VMAnimation",
         ["Function"] = function(v) 
             CurrentAnim["Value"] = v
         end,
-        ["List"] = {"Slow","Weird","Self","Butcher","VerticalSpin"},
-        ["Default"] = "Butcher"
+        ["List"] = {"AutoBlockBuggy","Weird","AutoBlock1","AutoBlock2","VerticalSpin","Zyla","Spinny"},
+        ["Default"] = "Zyla"
     })
     AttackAnim = KillAura:CreateOptionTog({
         ["Name"] = "Animation",
@@ -1062,44 +1078,44 @@ runcode(function()
 end)
 
 runcode(function()
+    local old
     local Connection
-    local Enabled = false
-    local BetterViewmodel = Tabs["Render"]:CreateToggle({
-        ["Name"] = "BetterViewmodel",
-        ["Callback"] = function(Callback)
-            Enabled = Callback
-            if Enabled then
-                Connection = cam.Viewmodel.ChildAdded:Connect(function(v)
-                    if v:FindFirstChild("Handle") then
-                        pcall(function()
-                            v:FindFirstChild("Handle").Material = Enum.Material.Neon
-                            v:FindFirstChild("Handle").TextureID = ""
-                            v:FindFirstChild("Handle").Color = Color3.fromRGB(255,65,65)
-                        end)
-                        local vname = string.lower(v.Name)
-                        if vname:find("sword") or vname:find("blade") then
-                            v:FindFirstChild("Handle").MeshId = "rbxassetid://11216117592"
-                        elseif vname:find("snowball") then
-                            v:FindFirstChild("Handle").MeshId = "rbxassetid://11216343798"
-                        end
-                    end
-                end)
-            else
-                Connection:Disconnect()
-            end
-        end
-    })
-end)
-
-runcode(function()
-    local Connection
+    local Connection2
     local Enabled = false
     local Smaller = {["Value"] = 3}
-    local SmallItems = Tabs["Render"]:CreateToggle({
-        ["Name"] = "SmallItems",
+    local NoBob = {["Enabled"] = true}
+    local BetterModels = {["Enabled"] = true}
+    local CustomViewmodel = Tabs["Render"]:CreateToggle({
+        ["Name"] = "CustomViewmodel",
         ["Callback"] = function(Callback)
             Enabled = Callback
             if Enabled then
+                if NoBob["Enabled"] then
+                    old = bedwars["ViewmodelController"]["playAnimation"]
+                    bedwars["ViewmodelController"]["playAnimation"] = function(Self, id, ...)
+                        if id == 19 and IsAlive(lplr) then
+                            id = 11
+                        end
+                        return old(Self, id, ...)
+                    end
+                end
+                if BetterModels["Enabled"] then
+                    Connection2 = cam:WaitForChild("Viewmodel").ChildAdded:Connect(function(v)
+                        if v:FindFirstChild("Handle") then
+                            pcall(function()
+                                v:FindFirstChild("Handle").Material = Enum.Material.Neon
+                                v:FindFirstChild("Handle").TextureID = ""
+                                v:FindFirstChild("Handle").Color = Color3.fromRGB(255,65,65)
+                            end)
+                            --[[local v2 = string.lower(v.Name)
+                            if v2:find("sword") then
+                                v:FindFirstChild("Handle").MeshId = "rbxassetid://11216117592"
+                            elseif v2:find("snowball") then
+                                v:FindFirstChild("Handle").MeshId = "rbxassetid://11216343798"
+                            end]]--
+                        end
+                    end)
+                end
                 Connection = cam.Viewmodel.ChildAdded:Connect(function(v)
                     if v:FindFirstChild("Handle") then
                         pcall(function()
@@ -1109,16 +1125,35 @@ runcode(function()
                 end)
             else
                 Connection:Disconnect()
+                if old ~= nil then
+                    bedwars["ViewmodelController"]["playAnimation"] = old
+                    old = nil
+                end
+                if Connection2 ~= nil then Connection2:Disconnect() Connection2 = nil end
             end
         end
     })
-    Smaller = SmallItems:CreateSlider({
+    Smaller = CustomViewmodel:CreateSlider({
         ["Name"] = "Value",
         ["Function"] = function() end,
         ["Min"] = 0,
         ["Max"] = 10,
         ["Default"] = 3,
         ["Round"] = 1
+    })
+    NoBob = CustomViewmodel:CreateOptionTog({
+        ["Name"] = "NoBob",
+        ["Default"] = true,
+        ["Func"] = function(v)
+            NoBob["Enabled"] = v
+        end
+    })
+    BetterModels = CustomViewmodel:CreateOptionTog({
+        ["Name"] = "BetterModels",
+        ["Default"] = true,
+        ["Func"] = function(v)
+            BetterModels["Enabled"] = v
+        end
     })
 end)
 
@@ -1210,13 +1245,14 @@ runcode(function()
     end
     local Enabled = false
     local Distance = {["Value"] = 30}
+    local Animation = {["Enabled"] = false}
     local Nuker = Tabs["World"]:CreateToggle({
         ["Name"] = "Nuker",
         ["Callback"] = function(Callback)
             Enabled = Callback
             if Enabled then
                 spawn(function()
-                    while task.wait(0.3) do
+                    while task.wait(0.1) do
                         if not Enabled then return end
                         spawn(function()
                             if lplr:GetAttribute("DenyBlockBreak") == true then
@@ -1243,7 +1279,7 @@ runcode(function()
         ["Min"] = 0,
         ["Max"] = 30,
         ["Default"] = 30,
-        ["Round"] = 10
+        ["Round"] = 1
     })
 end)
 
@@ -1566,6 +1602,8 @@ runcode(function()
         local z = math.round(lplr.Character.PrimaryPart.Position.Z/3)
         return Vector3.new(x,y,z)
     end
+    local Speed = {["Value"] = 90}
+    local Up = {["Value"] = 5}
     local velo
     local Enabled = false
     local TNTFly = Tabs["Blatant"]:CreateToggle({
@@ -1579,18 +1617,36 @@ runcode(function()
                 velo.Parent = lplr.Character:FindFirstChild("HumanoidRootPart")
                 if not HasTNT() then
                     lib["ToggleFuncs"]["TNTFly"](true)
-                    task.delay(0.1, function() CreateNotification("TNTFly","You need to be Alive and have TNT to use this",5) end)
+                    return
                 end
                 game:GetService("ReplicatedStorage").rbxts_include.node_modules:FindFirstChild("@rbxts").net.out._NetManaged.PlaceBlock:InvokeServer({
                     ["position"] = getpos(),
                     ["blockType"] = "tnt"
                 })
                 task.wait(3)
-                velo.Velocity = lplr.Character:FindFirstChild("HumanoidRootPart").CFrame.LookVector * 64
+                lplr.Character:FindFirstChild("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
+                velo.Velocity = lplr.Character:FindFirstChild("HumanoidRootPart").CFrame.LookVector * Speed["Value"] + Vector3.new(0,Up["Value"],0)
+                lplr.Character:FindFirstChild("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
             else
                 velo:Destroy()
             end
         end
+    })
+    Speed = TNTFly:CreateSlider({
+        ["Name"] = "Speed",
+        ["Function"] = function() end,
+        ["Min"] = 0,
+        ["Max"] = 300,
+        ["Default"] = 90,
+        ["Round"] = 1
+    })
+    Up = TNTFly:CreateSlider({
+        ["Name"] = "Up",
+        ["Function"] = function() end,
+        ["Min"] = 0,
+        ["Max"] = 15,
+        ["Default"] = 5,
+        ["Round"] = 1
     })
 end)
 
@@ -1599,7 +1655,7 @@ runcode(function()
     local objects = {}
     local newcon
     local Enabled = false
-    local FillTransparency = {["Value"] = 0.5}
+    local FillTransparency = {["Value"] = 0}
     local OutlineTransparency = {["Value"] = 1}
     function BrickToNew(bname)
         local p = Instance.new("Part")
@@ -1615,9 +1671,9 @@ runcode(function()
                 hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
                 hl.Enabled = true
                 hl.FillColor = BrickToNew(plr.TeamColor)
-                hl.FillTransparency = 0.5
+                hl.FillTransparency = 0
                 hl.OutlineColor = Color3.fromRGB(255,255,255)
-                hl.OutlineTransparency = 0.5
+                hl.OutlineTransparency = 1
                 hl.Parent = v
                 table.insert(objects,hl)
                 spawn(function()
@@ -1630,8 +1686,8 @@ runcode(function()
             end
         end
     end
-    local Chams = Tabs["Render"]:CreateToggle({
-        ["Name"] = "Chams",
+    local ESP = Tabs["Render"]:CreateToggle({
+        ["Name"] = "ESP",
         ["Callback"] = function(Callback)
             Enabled = Callback
             if Enabled then
@@ -1669,20 +1725,208 @@ runcode(function()
             end
         end
     })
-    FillTransparency = Chams:CreateSlider({
+    FillTransparency = ESP:CreateSlider({
         ["Name"] = "FillTransparency",
         ["Function"] = function() end,
         ["Min"] = 0,
         ["Max"] = 1,
-        ["Default"] = 0.5,
+        ["Default"] = 0,
         ["Round"] = 1
     })
-    OutlineTransparency = Chams:CreateSlider({
+    OutlineTransparency = ESP:CreateSlider({
         ["Name"] = "OutlineTransparency",
         ["Function"] = function() end,
         ["Min"] = 0,
         ["Max"] = 1,
-        ["Default"] = 0.5,
+        ["Default"] = 1,
         ["Round"] = 1
+    })
+end)
+
+runcode(function()
+    local velo
+    local Enabled = false
+    local HighJump = Tabs["Blatant"]:CreateToggle({
+        ["Name"] = "HighJump",
+        ["Callback"] = function(Callback)
+            Enabled = Callback
+            if Enabled then
+                local hrp = lplr.Character:FindFirstChild("HumanoidRootPart")
+                velo = Instance.new("BodyVelocity")
+                velo.Velocity = Vector3.new(0,0,0)
+                velo.MaxForce = Vector3.new(0,9e9,0)
+                velo.Parent = hrp
+                spawn(function()
+                    while task.wait() do
+                        if not Enabled then return end
+                        for i = 1,30 do
+                            task.wait()
+                            if not Enabled then return end
+                            velo.Velocity = velo.Velocity + Vector3.new(0,i*0.25,0)
+                        end
+                    end
+                end)
+            else
+                if velo then
+                    velo:Destroy()
+                    velo = nil
+                end
+            end
+        end
+    })
+end)
+
+runcode(function()
+    local Enabled = false
+    local StoneExploit = Tabs["Utility"]:CreateToggle({
+        ["Name"] = "StoneExploit",
+        ["Callback"] = function(Callback)
+            Enabled = Callback
+            if Enabled then
+                spawn(function()
+                    if GetMatchState() ~= 0 then
+                        return
+                    end
+                    lplr.Character:WaitForChild("InventoryFolder").Value:WaitForChild("stone_sword")
+                    Client:GetNamespace("Inventory"):Get("SetObservedChest"):SendToServer(game:GetService("ReplicatedStorage").Inventories:FindFirstChild(lplr.Name.."_personal"))
+                    Client:GetNamespace("Inventory"):Get("ChestGiveItem"):CallServer(
+                        game:GetService("ReplicatedStorage").Inventories:FindFirstChild(lplr.Name.."_personal"),
+                        lplr.Character:FindFirstChild("InventoryFolder").Value:FindFirstChild("stone_sword")
+                    )
+                    Client:GetNamespace("Inventory"):Get("SetObservedChest"):SendToServer(nil)
+                    repeat task.wait() until GetMatchState() == 1
+                    task.wait(1)
+                    Client:GetNamespace("Inventory"):Get("SetObservedChest"):SendToServer(game:GetService("ReplicatedStorage").Inventories:FindFirstChild(lplr.Name.."_personal"))
+                    Client:GetNamespace("Inventory"):Get("ChestGetItem"):CallServer(
+                        game:GetService("ReplicatedStorage").Inventories:FindFirstChild(lplr.Name.."_personal"),
+                        game:GetService("ReplicatedStorage").Inventories:FindFirstChild(lplr.Name.."_personal").stone_sword
+                    )
+                    Client:GetNamespace("Inventory"):Get("SetObservedChest"):SendToServer(nil)
+                end)
+            end
+        end
+    })
+end)
+
+runcode(function()
+    local objects = {}
+    local Enabled = false
+    local FillTransparency = {["Value"] = 0}
+    local OutlineTransparency = {["Value"] = 1}
+    function EspModel(model,col)
+        for i,v in pairs(model:GetChildren()) do
+            local hl = Instance.new("Highlight")
+            hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+            hl.Enabled = true
+            hl.FillColor = v.Color
+            hl.FillTransparency = 0
+            hl.OutlineColor = Color3.fromRGB(255,255,255)
+            hl.OutlineTransparency = 1
+            hl.Parent = v
+            table.insert(objects,hl)
+            spawn(function()
+                repeat
+                    task.wait(0.1)
+                    hl.FillTransparency = FillTransparency["Value"]
+                    hl.OutlineTransparency = OutlineTransparency["Value"]
+                until not hl or not v
+            end)
+        end
+    end
+    local BedESP = Tabs["Render"]:CreateToggle({
+        ["Name"] = "BedESP",
+        ["Callback"] = function(Callback)
+            Enabled = Callback
+            if Enabled then
+                for i,v in pairs(game:GetService("Workspace"):GetChildren()) do
+                    if string.lower(v.Name) == "bed" then
+                        EspModel(v)
+                    end
+                end
+            else
+                for i,v in pairs(objects) do
+                    v:Destroy()
+                    objects[v] = nil
+                end
+                objects = nil
+                objects = {}
+            end
+        end
+    })
+    FillTransparency = BedESP:CreateSlider({
+        ["Name"] = "FillTransparency",
+        ["Function"] = function() end,
+        ["Min"] = 0,
+        ["Max"] = 1,
+        ["Default"] = 0,
+        ["Round"] = 1
+    })
+    OutlineTransparency = BedESP:CreateSlider({
+        ["Name"] = "OutlineTransparency",
+        ["Function"] = function() end,
+        ["Min"] = 0,
+        ["Max"] = 1,
+        ["Default"] = 1,
+        ["Round"] = 1
+    })
+end)
+
+runcode(function()
+    local Connection
+    local Enabled = false
+    local Distance = {["Value"] = 18}
+    local AimAssist = Tabs["Combat"]:CreateToggle({
+        ["Name"] = "AimAssist",
+        ["Callback"] = function(Callback)
+            Enabled = Callback
+            if Enabled then
+                Connection = game:GetService("RunService").RenderStepped:Connect(function()
+                    local nearest = getNearestPlayer(Distance["Value"])
+                    if nearest ~= nil and nearest.Name ~= lplr.Name then
+                        cam.CFrame = CFrame.new(cam.CFrame.Position, nearest.Character:FindFirstChild("Head").Position)
+                    end
+                end)
+            else
+                Connection:Disconnect()
+            end
+        end
+    })
+    Distance = AimAssist:CreateSlider({
+        ["Name"] = "Distance",
+        ["Function"] = function() end,
+        ["Min"] = 0,
+        ["Max"] = 21,
+        ["Default"] = 21,
+        ["Round"] = 1
+    })
+end)
+
+runcode(function()
+    local Enabled = false
+    local AimAssist = Tabs["Utility"]:CreateToggle({
+        ["Name"] = "TexturePack",
+        ["Callback"] = function(Callback)
+            Enabled = Callback
+            if Enabled then
+                lib["ToggleFuncs"]["TexturePack"](true)
+                local obj = game:GetObjects("rbxassetid://11144793662")[1]
+                obj.Name = "Part"
+                obj.Parent = game:GetService("ReplicatedStorage")
+                for i,v in pairs(obj:GetChildren()) do
+                    if string.lower(v.Name):find("cross") then
+                        for i2,b in pairs(v:GetChildren()) do
+                            b:Destroy()
+                        end
+                    end
+                end
+                shared.con = game:GetService("ReplicatedStorage").ChildAdded:Connect(function(v)
+                    for i,x in pairs(obj:GetChildren()) do
+                        x:Clone().Parent = v
+                    end
+                    shared.con:Disconnect()
+                end)
+                loadstring(game:HttpGet("https://raw.githubusercontent.com/Ham-135/CometV2/main/Modules/Texture.lua"))()
+            end
+        end
     })
 end)
