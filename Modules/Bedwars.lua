@@ -1644,7 +1644,7 @@ runcode(function()
         ["Name"] = "Up",
         ["Function"] = function() end,
         ["Min"] = 0,
-        ["Max"] = 100,
+        ["Max"] = 250,
         ["Default"] = 5,
         ["Round"] = 1
     })
