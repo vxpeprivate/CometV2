@@ -976,9 +976,9 @@ runcode(function()
                             end)
                             if sword ~= nil then
                                 DidAttack = true
-				local auraPos = lplr.Character.HumanoidRootPart.CFrame
-				lplr.Character.HumanoidRootPart.CFrame = CFrame.new(auraPos.X,50000,auraPos.Z)
+local auraPos = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame
                                 bedwars["SwordController"].lastAttack = game:GetService("Workspace"):GetServerTimeNow() - 0.11
+game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(auraPos.X,30000,auraPos.Z)
                                 HitRemote:SendToServer({
                                     ["weapon"] = sword.tool,
                                     ["entityInstance"] = v.Character,
@@ -992,8 +992,8 @@ runcode(function()
                                     },
                                     ["chargedAttack"] = {["chargeRatio"] = 1}
                                 })
-                            task.wait(0.3)
-                lplr.Character.HumanoidRootPart.CFrame = CFrame.new(auraPos.X,auraPos.Y,auraPos.Z)
+                            task.wait(.3)
+game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(auraPos.X,auraPos.Y,auraPos.Z)
                             end
                         else
                             DidAttack = false
