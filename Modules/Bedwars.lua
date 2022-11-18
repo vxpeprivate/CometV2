@@ -979,6 +979,7 @@ runcode(function()
 local auraPos = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame
                                 bedwars["SwordController"].lastAttack = game:GetService("Workspace"):GetServerTimeNow() - 0.11
 game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(auraPos.X,30000,auraPos.Z)
+                            task.wait(.15)
                                 HitRemote:SendToServer({
                                     ["weapon"] = sword.tool,
                                     ["entityInstance"] = v.Character,
@@ -992,7 +993,7 @@ game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(auraPos.
                                     },
                                     ["chargedAttack"] = {["chargeRatio"] = 1}
                                 })
-                            task.wait(.3)
+                            task.wait(.15)
 game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(auraPos.X,auraPos.Y,auraPos.Z)
                             end
                         else
@@ -1937,8 +1938,8 @@ end)
 
 runcode(function()
     local Enabled = false
-    local Gravity = Tabs["Blatant"]:CreateToggle({
-        ["Name"] = "hide",
+    local Hiding = Tabs["Blatant"]:CreateToggle({
+        ["Name"] = "Hide lol",
         ["Callback"] = function(Callback)
             Enabled = Callback
             if Enabled then
