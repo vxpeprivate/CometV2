@@ -9,7 +9,7 @@ local lib
 if shared["betterisfile"]("CometV2/GuiLibrary") then
     lib = loadstring(readfile("CometV2/GuiLibrary.lua"))()
 else
-    lib = loadstring(game:HttpGet("https://raw.githubusercontent.com/Ham-135/CometV2/main/GuiLibrary.lua"))()
+    lib = loadstring(game:HttpGet("https://raw.githubusercontent.com/vxpeprivate/CometV2/main/GuiLibrary.lua"))()
 end
 local getasset = getsynasset or getcustomasset
 local ScreenGuitwo = game:GetService("CoreGui").RektskyNotificationGui
@@ -1925,7 +1925,7 @@ runcode(function()
                     end
                     shared.con:Disconnect()
                 end)
-                loadstring(game:HttpGet("https://raw.githubusercontent.com/Ham-135/CometV2/main/Modules/Texture.lua"))()
+                loadstring(game:HttpGet("https://raw.githubusercontent.com/vxpeprivate/CometV2/main/Modules/Texture.lua"))()
             end
         end
     })
