@@ -1952,6 +1952,7 @@ game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(lastPos.
                 end)
             else
                 game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(lastPos.X,lastPos.Y,lastPos.Z)
+		lastPos = nil
             end
         end
     })
