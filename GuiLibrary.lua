@@ -3,7 +3,7 @@ local array
 if shared["betterisfile"]("CometV2/ArrayList.lua") then
     array = loadstring(readfile("CometV2/ArrayList.lua"))()
 else
-    array = loadstring(game:HttpGet("https://raw.githubusercontent.com/Ham-135/CometV2/main/ArrayList.lua"))()
+    array = loadstring(game:HttpGet("https://raw.githubusercontent.com/vxpeprivate/CometV2/main/ArrayList.lua"))()
 end
 local lib = {
     ["Rainbow"] = false,
