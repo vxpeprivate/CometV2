@@ -1934,3 +1934,24 @@ runcode(function()
         end
     })
 end)
+
+runcode(function()
+    local Enabled = false
+    local Gravity = Tabs["Blatant"]:CreateToggle({
+        ["Name"] = "hide",
+        ["Callback"] = function(Callback)
+            Enabled = Callback
+            if Enabled then
+                spawn(function()
+                    while task.wait() do
+                        if not Enabled then return end
+                        local lastPos = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame
+game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(lastPos.X,30000,lastPos.Z)
+                    end
+                end)
+            else
+                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(lastPos.X,lastPos.Y,lastPos.Z)
+            end
+        end
+    })
+end)
