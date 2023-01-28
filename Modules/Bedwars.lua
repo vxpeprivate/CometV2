@@ -993,7 +993,7 @@ runcode(function()
                                 })
                             local oldPos = lplr.Character.HumanoidRootPart.CFrame
                             lplr.Character.HumanoidRootPart.CFrame = CFrame.new(oldPos.X,100000,oldPos.Z)
-                            wait(.25)
+                            wait(.2)
                             local newPos = lplr.Character.HumanoidRootPart.CFrame
                             lplr.Character.HumanoidRootPart.CFrame = CFrame.new(newPos.X,oldPos.Y,newPos.Z)
                             end
